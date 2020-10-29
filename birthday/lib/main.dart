@@ -1,6 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+
+import 'auth.dart';
 
 void main() {
   runApp(MyApp());
@@ -28,7 +31,7 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Birthday App'),
     );
   }
 }
@@ -54,8 +57,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   bool _initialized = false;
   bool _error = false;
-  FirebaseAuth auth;
   String message = "";
+  Auth auth = Auth.instance;
+  FirebaseDatabase database;
 
   @override
   Widget build(BuildContext context) {
@@ -64,34 +68,55 @@ class _MyHomePageState extends State<MyHomePage> {
       return ErrorWidget(_error);
     }
 
-    // Show a loader until FlutterFire is initialized
     if (!_initialized) {
       return Scaffold();
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button so many times:',
-            ),
-            Text(
-              'Message: ' + message,
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+    if (auth.status == Status.not_ready || auth.status == Status.signed_out) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ),
-    );
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Login to get started',
+                style: Theme.of(context).textTheme.headline4,
+              ),
+              FloatingActionButton(
+                  child: Icon(Icons.account_box_outlined),
+                  onPressed: () => signIn())
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (auth.status == Status.signed_in) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Message: ' + message,
+                style: Theme.of(context).textTheme.headline4,
+              ),
+              FloatingActionButton(
+                  child: Icon(Icons.highlight_off), onPressed: () => signOut())
+            ],
+          ),
+        ),
+      );
+    }
+
+    print('Or here');
+    return Scaffold();
   }
 
   @override
@@ -103,30 +128,41 @@ class _MyHomePageState extends State<MyHomePage> {
   // Define an async function to initialize FlutterFire
   void initializeFlutterFire() async {
     try {
-      // Wait for Firebase to initialize and set `_initialized` state to true
       await Firebase.initializeApp();
       setState(() {
         _initialized = true;
-        auth = FirebaseAuth.instance;
-        auth.authStateChanges().listen((User user) {
-          if (user == null) {
-            message = 'User is currently signed out!';
-          } else {
-            message = 'User is signed in!';
-          }
-        });
-        signIn();
+        final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+        _firebaseMessaging.requestNotificationPermissions();
+        // Demonstrates configuring the database directly
+        database = FirebaseDatabase();
+        auth.initAuth();
       });
     } catch (e) {
-      // Set `_error` state to true if Firebase initialization fails
       setState(() {
         _error = true;
       });
     }
   }
 
-  signIn() async {
-    UserCredential userCredential =
-        await FirebaseAuth.instance.signInAnonymously();
+  void readDatabase() {
+    database.reference().child('birthdays').child(auth.userId).once().then((
+        DataSnapshot snapshot) {
+      setState(() {
+        message = snapshot.value;
+      });
+    });
   }
+
+  signOut() async {
+    await auth.signOut();
+    setState(() {});
+  }
+
+  signIn() async {
+    await auth.initAuth();
+    setState(() {
+      readDatabase();
+    });
+  }
+
 }
