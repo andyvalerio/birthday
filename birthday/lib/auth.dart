@@ -28,6 +28,7 @@ class Auth {
 
   signOut() async {
     await FirebaseAuth.instance.signOut();
+    await GoogleSignIn().signOut();
   }
 
   _authChange(User user) {

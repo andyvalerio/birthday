@@ -106,12 +106,12 @@ class _MyHomePageState extends State<MyHomePage> {
               Text(
                 'Message: ' + message,
                 style: Theme.of(context).textTheme.headline4,
-              ),
-              FloatingActionButton(
-                  child: Icon(Icons.highlight_off), onPressed: () => signOut())
+              )
             ],
           ),
         ),
+        floatingActionButton: FloatingActionButton(
+            onPressed: () => signOut(), child: Icon(Icons.logout)),
       );
     }
 
@@ -148,7 +148,7 @@ class _MyHomePageState extends State<MyHomePage> {
     database.reference().child('birthdays').child(auth.userId).once().then((
         DataSnapshot snapshot) {
       setState(() {
-        message = snapshot.value;
+        message = snapshot.value == null ? '' : snapshot.value;
       });
     });
   }
