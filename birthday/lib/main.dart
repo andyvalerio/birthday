@@ -1,9 +1,12 @@
+import 'dart:collection';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 import 'auth.dart';
+import 'crud_birthday.dart';
 
 void main() {
   runApp(MyApp());
@@ -60,6 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String message = "";
   Auth auth = Auth.instance;
   FirebaseDatabase database;
+  List<String> birthdays = List<String>();
 
   @override
   Widget build(BuildContext context) {
@@ -101,17 +105,35 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Message: ' + message,
-                style: Theme.of(context).textTheme.headline4,
-              )
-            ],
-          ),
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  'Birthdays: ' + birthdays.toString(),
+                  style: Theme.of(context).textTheme.headline4,
+                ),
+                Expanded(
+                    child: Stack(children: <Widget>[
+                  Align(
+                      alignment: Alignment.bottomLeft,
+                      child: FloatingActionButton(
+                          onPressed: () => signOut(),
+                          child: Icon(Icons.logout),
+                          heroTag: 'logout')),
+                  Align(
+                      alignment: Alignment.bottomRight,
+                      child: FloatingActionButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => CrudBirthday()));
+                        },
+                        child: Icon(Icons.add),
+                        heroTag: 'birthday',
+                      ))
+                ]))
+              ]),
         ),
-        floatingActionButton: FloatingActionButton(
-            onPressed: () => signOut(), child: Icon(Icons.logout)),
       );
     }
 
@@ -125,7 +147,6 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-  // Define an async function to initialize FlutterFire
   void initializeFlutterFire() async {
     try {
       await Firebase.initializeApp();
@@ -133,9 +154,8 @@ class _MyHomePageState extends State<MyHomePage> {
         _initialized = true;
         final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
         _firebaseMessaging.requestNotificationPermissions();
-        // Demonstrates configuring the database directly
         database = FirebaseDatabase();
-        auth.initAuth();
+        signIn();
       });
     } catch (e) {
       setState(() {
@@ -145,11 +165,19 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void readDatabase() {
-    database.reference().child('birthdays').child(auth.userId).once().then((
-        DataSnapshot snapshot) {
-      setState(() {
-        message = snapshot.value == null ? '' : snapshot.value;
-      });
+    database
+        .reference()
+        .child('birthdays')
+        .child(auth.userId)
+        .onValue
+        .listen((event) {
+      birthdays.clear();
+      var map = HashMap.from(event.snapshot.value);
+      for (String key in map.keys) {
+        var birthday = HashMap.from(map[key]);
+        birthdays.add(birthday.toString());
+      }
+      setState(() {});
     });
   }
 
