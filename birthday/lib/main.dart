@@ -1,9 +1,12 @@
 import 'dart:collection';
 
+import 'package:birthday/birthday_widget.dart';
+import 'package:date_util/date_util.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:slidable_action/widget/slidable_widget.dart';
 
 import 'auth.dart';
 import 'crud_birthday.dart';
@@ -63,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String message = "";
   Auth auth = Auth.instance;
   FirebaseDatabase database;
-  List<String> birthdays = List<String>();
+  Map<String, Map> birthdays = Map<String, Map>();
 
   @override
   Widget build(BuildContext context) {
@@ -106,32 +109,50 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Center(
           child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Text(
-                  'Birthdays: ' + birthdays.toString(),
-                  style: Theme.of(context).textTheme.headline4,
-                ),
                 Expanded(
+                    flex: 9,
+                    child: ListView.separated(
+                      primary: false,
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      itemCount: birthdays.length,
+                      separatorBuilder: (context, index) => Divider(),
+                      itemBuilder: (context, index) {
+                        var keyAt = birthdays.keys.elementAt(index);
+                        final item = birthdays[keyAt];
+                        return SlidableWidget(
+                          child: BirthdayTile(item.keys.first,
+                              toPrettyDate(item.values.first), 300 + index),
+                          onDismissed: (action) => setState(() {
+                            deleteBirthday(keyAt);
+                          }),
+                        );
+                      },
+                    )),
+                Expanded(
+                    flex: 1,
                     child: Stack(children: <Widget>[
-                  Align(
-                      alignment: Alignment.bottomLeft,
-                      child: FloatingActionButton(
-                          onPressed: () => signOut(),
-                          child: Icon(Icons.logout),
-                          heroTag: 'logout')),
-                  Align(
-                      alignment: Alignment.bottomRight,
-                      child: FloatingActionButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => CrudBirthday()));
-                        },
-                        child: Icon(Icons.add),
-                        heroTag: 'birthday',
-                      ))
-                ]))
+                      Align(
+                          alignment: Alignment.bottomLeft,
+                          child: FloatingActionButton(
+                              onPressed: () => signOut(),
+                              child: Icon(Icons.logout),
+                              heroTag: 'logout')),
+                      Align(
+                          alignment: Alignment.bottomRight,
+                          child: FloatingActionButton(
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => CrudBirthday()));
+                            },
+                            child: Icon(Icons.add),
+                            heroTag: 'birthday',
+                          ))
+                    ]))
               ]),
         ),
       );
@@ -175,7 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
       var map = HashMap.from(event.snapshot.value);
       for (String key in map.keys) {
         var birthday = HashMap.from(map[key]);
-        birthdays.add(birthday.toString());
+        birthdays.putIfAbsent(key, () => birthday);
       }
       setState(() {});
     });
@@ -191,6 +212,23 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       readDatabase();
     });
+  }
+
+  String toPrettyDate(String date) {
+    var split = date.split('-');
+    var day = split[0];
+    var month = split[1];
+    return day + ' ' + DateUtil().month(int.parse(month));
+  }
+
+  deleteBirthday(String key) async {
+    await database
+        .reference()
+        .child('birthdays')
+        .child(auth.userId)
+        .child(key)
+        .remove();
+    setState(() {});
   }
 
 }
