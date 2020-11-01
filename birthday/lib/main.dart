@@ -173,8 +173,6 @@ class _MyHomePageState extends State<MyHomePage> {
       await Firebase.initializeApp();
       setState(() {
         _initialized = true;
-        final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-        _firebaseMessaging.requestNotificationPermissions();
         database = FirebaseDatabase();
         signIn();
       });
@@ -211,6 +209,7 @@ class _MyHomePageState extends State<MyHomePage> {
     await auth.initAuth();
     setState(() {
       readDatabase();
+      saveToken();
     });
   }
 
@@ -231,4 +230,15 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {});
   }
 
+  void saveToken() {
+    final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+    _firebaseMessaging.requestNotificationPermissions();
+    _firebaseMessaging.getToken().then((token) {
+      database
+          .reference()
+          .child('tokens')
+          .child(auth.userId)
+          .set(<String, String>{'android': token});
+    });
+  }
 }

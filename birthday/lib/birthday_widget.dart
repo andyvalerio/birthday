@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class BirthdayTile extends ListTile {
@@ -9,8 +11,10 @@ class BirthdayTile extends ListTile {
           ),
           leading: CircleAvatar(
             radius: 28,
-            backgroundImage:
-                NetworkImage('https://i.pravatar.cc/' + index.toString()),
+            backgroundImage: NetworkImage(
+                'https://randomuser.me/api/portraits/lego/' +
+                    Random().nextInt(9).toString() +
+                    '.jpg'),
           ),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
