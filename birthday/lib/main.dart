@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:slidable_action/widget/slidable_widget.dart';
 
 import 'auth.dart';
+import 'birthdays_comparison.dart';
 import 'crud_birthday.dart';
 
 void main() {
@@ -120,14 +121,20 @@ class _MyHomePageState extends State<MyHomePage> {
                       itemCount: birthdays.length,
                       separatorBuilder: (context, index) => Divider(),
                       itemBuilder: (context, index) {
-                        var keyAt = birthdays.keys.elementAt(index);
-                        final item = birthdays[keyAt];
+                        List<MapEntry<String, Map>> tempList = birthdays.entries
+                            .toList(growable: false);
+                        tempList.sort((x, y) =>
+                            compareBirthdays(x.value, y.value));
+                        var keyAt = tempList[index].key;
+
                         return SlidableWidget(
-                          child: BirthdayTile(item.keys.first,
-                              toPrettyDate(item.values.first), 300 + index),
-                          onDismissed: (action) => setState(() {
-                            deleteBirthday(keyAt);
-                          }),
+                          child: BirthdayTile(tempList[index].value.keys.first,
+                              toPrettyDate(tempList[index].value.values.first),
+                              300 + index),
+                          onDismissed: (action) =>
+                              setState(() {
+                                deleteBirthday(keyAt);
+                              }),
                         );
                       },
                     )),
