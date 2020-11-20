@@ -2,11 +2,11 @@ import functions = require('firebase-functions');
 import admin = require('firebase-admin');
 admin.initializeApp();
 
-exports.scheduledBirthdays = functions.pubsub.schedule('every 24 hours').onRun((context) => {
+exports.scheduledBirthdays = functions.pubsub.schedule('every 24 hours').onRun((context: any) => {
     console.log('Connecting to the database');
     const birthdaysToNotifyForUser = new Map();
 
-    return admin.database().ref('birthdays/').once('value', (snapshot) => {
+    return admin.database().ref('birthdays/').once('value', (snapshot: any) => {
 
         for (const [uid, value] of Object.entries(snapshot.val())) {
             console.log('User is: ' + uid);
@@ -49,13 +49,13 @@ function isBirthdayToBeNotified(birthday: any): boolean {
 }
 
 // Calculate the next birthday occurrence for a birthday. Is it this year or (if already passed) next year? 
-function nextBirthdayTime(date: string): Date{
+export function nextBirthdayTime(date: string): Date{
     const dateS = date + '';
     const parts = dateS.split('-', 2);
     const day = parts[0];
     const month = parts[1];
     const today = new Date();
-    if (parseInt(month) > today.getMonth() || (parseInt(month) === today.getMonth() && parseInt(day) > today.getDay())) {
+    if (parseInt(month) > today.getMonth() || (parseInt(month) === today.getMonth() && parseInt(day) > today.getDate())) {
         //This year
         return new Date(today.getFullYear() + '-' + month + '-' + day)
     }
@@ -73,14 +73,14 @@ function differenceInDays(today: Date, nextBday: Date) : number {
 function notifyBirthdaysToUsers(birthdays: Map<string, string[]>) {
     // For each user, retrieve its token and notify birthdays
     birthdays.forEach((bdays: string[], user: string) => {
-        admin.database().ref('tokens/').child(user).once('value', (snapshot) => {
+        admin.database().ref('tokens/').child(user).once('value', (snapshot: any) => {
             const token = Object.values(snapshot.val())[0];
             console.log('Token: ' + token);
             bdays.forEach(bday => {
                 sendMessage(token + '', bday);
             })
         })
-        .catch(error => console.log(error));
+        .catch((error: any) => console.log(error));
     });
 }
 
@@ -95,5 +95,5 @@ function sendMessage(token: string, message: string) {
    };
 
    admin.messaging().sendToDevice(token, payload)
-   .catch(error => console.log(error));
+   .catch((error: any) => console.log(error));
 }
