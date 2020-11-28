@@ -55,7 +55,7 @@ export function nextBirthdayTime(date: string): Date{
     const day = parts[0];
     const month = parts[1];
     const today = new Date();
-    if (parseInt(month) > today.getMonth() || (parseInt(month) === today.getMonth() && parseInt(day) > today.getDate())) {
+    if (parseInt(month) > (today.getMonth() + 1) || (parseInt(month) === (today.getMonth() + 1) && parseInt(day) > today.getDate())) {
         //This year
         return new Date(today.getFullYear() + '-' + month + '-' + day)
     }
