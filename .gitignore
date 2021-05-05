@@ -64,3 +64,15 @@ node_modules/
 
 # dotenv environment variables file
 .env
+birthday/local.properties
+birthday/pubspec.yaml
+birthday/.gradle/6.1.1/gc.properties
+birthday/.gradle/6.1.1/executionHistory/executionHistory.lock
+birthday/.gradle/6.1.1/fileChanges/last-build.bin
+birthday/.gradle/6.1.1/fileHashes/fileHashes.lock
+birthday/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+birthday/.gradle/buildOutputCleanup/cache.properties
+birthday/.gradle/checksums/checksums.lock
+birthday/.gradle/vcs-1/gc.properties
+birthday/android/app/google-services.json
+functions/package-lock.json

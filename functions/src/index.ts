@@ -91,9 +91,13 @@ function sendMessage(token: string, message: string) {
         notification: {
             title: 'Birthday coming up!',
             body: message
-        }
-   };
+        },
+        token: token
+    };
 
-   admin.messaging().sendToDevice(token, payload)
-   .catch((error: any) => console.log(error));
+    admin.messaging().send(payload)
+    .then((response) => {
+        console.log('Successfully sent message:', response);
+    })
+    .catch((error: any) => console.log(error));
 }
