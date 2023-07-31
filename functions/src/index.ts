@@ -2,7 +2,7 @@ import functions = require('firebase-functions');
 import admin = require('firebase-admin');
 admin.initializeApp();
 
-exports.scheduledBirthdays = functions.pubsub.schedule('every 24 hours').onRun((context: any) => {
+exports.scheduledBirthdays = functions.pubsub.schedule('every day 12:00').onRun((context: any) => {
     console.log('Connecting to the database');
     const birthdaysToNotifyForUser = new Map();
 
@@ -41,7 +41,7 @@ function isBirthdayToBeNotified(birthday: any): boolean {
         if (differenceInDays(new Date(), nextTime) === 14) {
             return true;
         }
-        if (differenceInDays(new Date(), nextTime) === 1) {
+        if (differenceInDays(new Date(), nextTime) === 0) {
             return true;
         }
     }
