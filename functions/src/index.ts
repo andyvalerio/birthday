@@ -2,7 +2,7 @@ import functions = require('firebase-functions');
 import admin = require('firebase-admin');
 admin.initializeApp();
 
-exports.scheduledBirthdays = functions.pubsub.schedule('every day 12:00').onRun((context: any) => {
+exports.scheduledBirthdays = functions.pubsub.schedule('every day 12:00').timeZone('Europe/Frankfurt').onRun((context: any) => {
     console.log('Connecting to the database');
     const birthdaysToNotifyForUser = new Map();
 
